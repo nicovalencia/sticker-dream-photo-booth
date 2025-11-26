@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Photo Booth - Sticker Dream</title>
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- iOS App Settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Sticker Dream" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+
+    <!-- iOS Icons -->
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+
+    <script type="module" src="./src/photo-booth.ts"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap");
+
+      /* Reset & Base */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      :root {
+        --pastel-pink: #ffb3d9;
+        --pastel-green: #b4e7ce;
+        --pastel-blue: #c2e7ff;
+        --pastel-yellow: #fff5b8;
+        --dark-text: #2d2d2d;
+        --shadow: #00000033;
+      }
+
+      body {
+        font-family: "Pixelify Sans", sans-serif;
+        font-optical-sizing: auto;
+        font-weight: 400;
+        font-style: normal;
+        background: linear-gradient(
+          135deg,
+          var(--pastel-pink) 0%,
+          var(--pastel-green) 100%
+        );
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .photo-booth-container {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: max(20px, env(safe-area-inset-top))
+          max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom))
+          max(20px, env(safe-area-inset-left));
+      }
+
+      /* Video and Canvas */
+      .camera-feed {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 90%;
+        max-height: 70vh;
+        width: auto;
+        height: auto;
+        border: 8px solid var(--dark-text);
+        border-radius: 20px;
+        box-shadow: 8px 8px 0 var(--dark-text), 0 0 0 12px var(--pastel-yellow);
+        background: black;
+        object-fit: contain;
+      }
+
+      .camera-canvas {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 90%;
+        max-height: 70vh;
+        width: auto;
+        height: auto;
+        border: 8px solid var(--dark-text);
+        border-radius: 20px;
+        box-shadow: 8px 8px 0 var(--dark-text), 0 0 0 12px var(--pastel-yellow);
+        background: black;
+        display: none;
+        transition: filter 2s ease-in-out;
+      }
+
+      .camera-canvas.grayscale {
+        filter: grayscale(100%);
+      }
+
+      /* Scene Input */
+      .scene-input-container {
+        position: absolute;
+        top: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 500px;
+        z-index: 10;
+      }
+
+      .scene-input-label {
+        display: block;
+        font-size: clamp(14px, 3vw, 18px);
+        font-weight: 700;
+        color: var(--dark-text);
+        margin-bottom: 8px;
+        text-align: center;
+        text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.8);
+      }
+
+      .scene-input {
+        width: 100%;
+        font-family: "Pixelify Sans", sans-serif;
+        font-size: clamp(16px, 3.5vw, 22px);
+        padding: 15px 20px;
+        background: white;
+        border: 6px solid var(--dark-text);
+        border-radius: 15px;
+        font-weight: 600;
+        text-align: center;
+        box-shadow: 6px 6px 0 var(--dark-text);
+        color: var(--dark-text);
+        outline: none;
+        transition: all 0.1s ease;
+      }
+
+      .scene-input:focus {
+        transform: translate(2px, 2px);
+        box-shadow: 4px 4px 0 var(--dark-text);
+      }
+
+      /* Printer Toggle */
+      .printer-toggle-container {
+        position: fixed;
+        top: 80px;
+        top: max(80px, calc(env(safe-area-inset-top) + 70px));
+        right: 20px;
+        right: max(20px, env(safe-area-inset-right));
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--pastel-blue);
+        border: 4px solid var(--dark-text);
+        border-radius: 12px;
+        padding: 10px 20px;
+        box-shadow: 4px 4px 0 var(--dark-text);
+        z-index: 1000;
+      }
+
+      .printer-toggle-label {
+        font-size: clamp(14px, 3vw, 18px);
+        font-weight: 700;
+        color: var(--dark-text);
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      /* Toggle Switch */
+      .toggle-switch {
+        position: relative;
+        width: 60px;
+        height: 30px;
+        background: white;
+        border: 4px solid var(--dark-text);
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+
+      .toggle-switch input {
+        display: none;
+      }
+
+      .toggle-slider {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 16px;
+        height: 16px;
+        background: var(--dark-text);
+        border-radius: 50%;
+        transition: transform 0.2s ease;
+      }
+
+      .toggle-switch input:checked + .toggle-slider {
+        transform: translateX(30px);
+      }
+
+      .toggle-switch input:checked ~ .toggle-switch {
+        background: var(--pastel-green);
+      }
+
+      /* Status Message */
+      .status-message {
+        position: absolute;
+        top: 200px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        border: 6px solid var(--dark-text);
+        border-radius: 15px;
+        padding: 20px 30px;
+        font-size: clamp(18px, 4vw, 28px);
+        font-weight: 700;
+        text-align: center;
+        box-shadow: 6px 6px 0 var(--dark-text);
+        color: var(--dark-text);
+        z-index: 10;
+        max-width: 80%;
+      }
+
+      .status-message.hidden {
+        display: none;
+      }
+
+      /* Buttons */
+      .capture-button,
+      .retry-button {
+        position: absolute;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: "Pixelify Sans", sans-serif;
+        font-size: clamp(24px, 5vw, 40px);
+        padding: 30px 60px;
+        background: var(--pastel-green);
+        color: var(--dark-text);
+        border: 8px solid var(--dark-text);
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 700;
+        text-transform: uppercase;
+        box-shadow: 8px 8px 0 var(--dark-text), 0 0 0 12px var(--pastel-yellow);
+        transition: all 0.1s ease;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+        z-index: 10;
+      }
+
+      .capture-button:active,
+      .retry-button:active {
+        transform: translateX(-50%) translate(4px, 4px);
+        box-shadow: 4px 4px 0 var(--dark-text), 0 0 0 12px var(--pastel-yellow);
+      }
+
+      .capture-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      .capture-button.hidden,
+      .retry-button.hidden {
+        display: none;
+      }
+
+      /* Loading State */
+      .loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
+
+      .loading-overlay.active {
+        display: flex;
+      }
+
+      .loading-spinner {
+        background: var(--pastel-blue);
+        border: 8px solid var(--dark-text);
+        border-radius: 20px;
+        padding: 40px 60px;
+        font-size: clamp(24px, 5vw, 40px);
+        font-weight: 700;
+        color: var(--dark-text);
+        box-shadow: 8px 8px 0 var(--dark-text);
+        animation: loading-pulse 1s ease-in-out infinite;
+      }
+
+      @keyframes loading-pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.05);
+          opacity: 0.9;
+        }
+      }
+
+      /* Generated Image */
+      .generated-image {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 90%;
+        max-height: 70vh;
+        width: auto;
+        height: auto;
+        border: 8px solid var(--dark-text);
+        border-radius: 20px;
+        box-shadow: 8px 8px 0 var(--dark-text), 0 0 0 12px var(--pastel-yellow);
+        background: white;
+        display: none;
+        object-fit: contain;
+      }
+
+      .generated-image.visible {
+        display: block;
+      }
+
+      /* Mode Switcher Link */
+      .mode-switcher {
+        position: fixed;
+        top: 20px;
+        top: max(20px, env(safe-area-inset-top));
+        right: 20px;
+        right: max(20px, env(safe-area-inset-right));
+        background: var(--pastel-pink);
+        color: var(--dark-text);
+        text-decoration: none;
+        padding: 12px 20px;
+        border: 4px solid var(--dark-text);
+        border-radius: 12px;
+        font-size: clamp(14px, 2vw, 18px);
+        font-weight: 700;
+        box-shadow: 4px 4px 0 var(--dark-text);
+        transition: all 0.1s ease;
+        z-index: 1000;
+        touch-action: manipulation;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .mode-switcher:active {
+        transform: translate(2px, 2px);
+        box-shadow: 2px 2px 0 var(--dark-text);
+      }
+
+      /* Mobile Optimizations */
+      @media (max-width: 768px) {
+        .photo-booth-container {
+          padding: 10px;
+        }
+
+        .scene-input-container {
+          top: 20px;
+        }
+
+        .scene-input {
+          padding: 12px 16px;
+        }
+
+        .printer-toggle-container {
+          top: 70px;
+          top: max(70px, calc(env(safe-area-inset-top) + 60px));
+          right: 10px;
+          right: max(10px, env(safe-area-inset-right));
+          padding: 8px 16px;
+        }
+
+        .capture-button,
+        .retry-button {
+          bottom: 20px;
+          padding: 20px 40px;
+        }
+
+        .status-message {
+          top: 170px;
+          padding: 15px 20px;
+        }
+
+        .mode-switcher {
+          top: 10px;
+          top: max(10px, env(safe-area-inset-top));
+          right: 10px;
+          right: max(10px, env(safe-area-inset-right));
+          padding: 10px 16px;
+          font-size: clamp(12px, 2vw, 16px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/" class="mode-switcher">Voice Mode</a>
+    <div class="photo-booth-container">
+      <!-- Scene Input -->
+      <div class="scene-input-container">
+        <input
+          type="text"
+          class="scene-input"
+          id="sceneInput"
+          value="dancing on a disco floor with disco ball and dance floor tiles"
+          placeholder="Enter scene description..."
+        />
+      </div>
+
+      <!-- Printer Toggle -->
+      <div class="printer-toggle-container">
+        <span class="printer-toggle-label">Print Stickers:</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="printerToggle" checked />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- Status Message -->
+      <div class="status-message hidden" id="statusMessage">
+        Initializing camera...
+      </div>
+
+      <!-- Loading Overlay -->
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">Creating Sticker...</div>
+      </div>
+
+      <!-- Camera Feed -->
+      <video class="camera-feed" id="cameraFeed" autoplay playsinline></video>
+
+      <!-- Canvas for Captured Frame -->
+      <canvas class="camera-canvas" id="cameraCanvas"></canvas>
+
+      <!-- Generated Image Display -->
+      <img class="generated-image" id="generatedImage" alt="Generated Sticker" />
+
+      <!-- Capture Button -->
+      <button class="capture-button hidden" id="captureButton">
+        Capture Photo
+      </button>
+
+      <!-- Retry Button -->
+      <button class="retry-button hidden" id="retryButton">
+        Capture Again
+      </button>
+    </div>
+  </body>
+</html>
