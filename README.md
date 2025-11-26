@@ -16,7 +16,7 @@ A voice-activated sticker printer. Press and hold the button, describe what you 
 1. Install dependencies:
 
 ```bash
-pnpm install
+npm install
 ```
 
 2. Create `.env` file:
@@ -25,20 +25,24 @@ pnpm install
 GEMINI_API_KEY=your_api_key_here
 ```
 
-3. Connect a USB thermal printer. Currently only supports USB printer in MacOS - I would like to get this running with bluetooth or a receipt printer instead.
+3. Setup your thermal printer:
+   - **For Phomemo printers**: Download and install the official drivers from [phomemo.com/pages/drivers](https://phomemo.com/pages/drivers) before connecting your printer
+   - After installing drivers, connect the USB thermal printer to your Mac
+   - Add the printer in **System Settings > Printers & Scanners**
+   - Currently only supports USB printers on macOS
 
 ## Running
 
 Start the backend server:
 
 ```bash
-pnpm server
+npm run server
 ```
 
 Start the frontend (in another terminal):
 
 ```bash
-pnpm dev
+npm run dev
 ```
 
 Open `http://localhost:5173`.
@@ -47,11 +51,13 @@ To use your phone, you'll need to visit the page on your local network. Since it
 
 ## Printers
 
-TLDR: [The Phomemo](https://amzn.to/4hOmqki) PM2 will work great over bluetooth or USB.
+TLDR: [The Phomemo](https://amzn.to/4hOmqki) PM2 will work great over USB.
+
+**Important**: For Phomemo printers, you must install the official drivers from [phomemo.com/pages/drivers](https://phomemo.com/pages/drivers) before the printer will be recognized by macOS.
 
 While any printer will work, I'm using a 4x6 thermal printer with 4x6 shipping labels. These printers are fast, cheap and don't require ink.
 
-Theoretically a bluetooth printer will work as well, but I have not tested. I'd love to get this working with these cheap Niimbot / Bluetooth "Cat printer", though those labels are plastic and not colour-able.
+Note: This project currently only supports USB printers on macOS. Bluetooth support and other platforms are not yet implemented. I'd love to get this working with these cheap Niimbot / Bluetooth "Cat printer", though those labels are plastic and not colour-able.
 
 ## Tips
 

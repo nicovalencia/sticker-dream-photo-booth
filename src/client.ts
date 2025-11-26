@@ -87,17 +87,12 @@ async function resetRecorder() {
       return;
     }
 
-    recordBtn.textContent = "Sending to Printer...";
-    await wait(3000);
-    recordBtn.textContent = "Printing...";
-    await wait(1500);
+    // Actually generate and print the image
+    await generateAndPrint(text);
 
-    // Stop loading state
+    // Reset button
     recordBtn.classList.remove("loading");
-    recordBtn.textContent = "Printed!";
-    setTimeout(() => {
-      recordBtn.textContent = "Sticker Dream";
-    }, 1000);
+    recordBtn.textContent = "Sticker Dream";
     resetRecorder();
 
   };
